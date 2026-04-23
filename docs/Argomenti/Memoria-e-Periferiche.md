@@ -7,7 +7,11 @@
 
 Di questo sistema sappiamo di cosa si occupa ogni singolo pezzo:
 
-![scheletro del cpu](../assets/focus_cpu.svg)
+| | |
+
+|---|---|
+
+| ![scheletro del cpu](../assets/focus_cpu.svg) | Conosce il contenuto dei propri registri, ma non in quale contesto vengono usati. |
 
 Conosce il contenuto dei propri registri, ma non in quale contesto vengono usati.
 
