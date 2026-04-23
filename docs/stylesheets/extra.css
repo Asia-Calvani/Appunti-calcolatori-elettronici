@@ -12,3 +12,8 @@ code, pre {
 .md-typeset img {
   border-radius: 8px;
 }
+
+/*commenti nella pos giusta*/
+.commentino_foto{
+  display: inline;
+}
