@@ -1,0 +1,14 @@
+/* Aumenta un po' la larghezza del contenuto */
+.md-grid {
+  max-width: 1200px;
+}
+
+/* Rende i code block un po' più leggibili */
+code, pre {
+  font-size: 0.95em;
+}
+
+/* Immagini un filo più "presentabili" */
+.md-typeset img {
+  border-radius: 8px;
+}
