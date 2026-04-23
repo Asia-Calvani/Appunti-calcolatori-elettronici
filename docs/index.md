@@ -6,22 +6,14 @@ Questi appunti sono in **Markdown**, pubblicati con **GitHub Pages**.
 - Apri una pagina in `docs/` e modifica il file `.md`
 - Aggiungi immagini e video in `docs/assets/`
 
-## Esempi rapidi
+## Informazioni del corso
 
-### Formula (LaTeX)
-Inline: $E = mc^2$
+### Docenti
 
-Blocco:
+Giuseppe Lettieri (giuseppe.lettieri@unipi.it) Parte teorica
+Federico Andrea Galatolo (federico.galatolo@unipi.it) Parte pratica fino all'anno accademico 2025/2026
+### Sito di riferimento del materiale del corso
 
-$$
-\sum_{i=1}^{n} i = \frac{n(n+1)}{2}
-$$
+https://calcolatori.iet.unipi.it/
 
-### Codice
-```c
-#include <stdio.h>
-int main() {
-  printf("Hello appunti!\n");
-  return 0;
-}
-```
+
