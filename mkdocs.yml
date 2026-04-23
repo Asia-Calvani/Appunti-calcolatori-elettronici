@@ -13,8 +13,8 @@ theme:
 
 nav:
   - Home: index.md
-  - Lezioni:
-      - "Lezione 1": lezioni/lezione-01.md
+  - Argomenti lezioni:
+      - "Memoria e Periferiche": Argomenti/Memoria-e-Periferiche.md
   - Esercizi:
       - "Esercizi 1": esercizi/esercizi-01.md
 
