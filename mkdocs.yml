@@ -14,7 +14,9 @@ theme:
 nav:
   - Home: index.md
   - Argomenti lezioni:
-      - "Memoria e Periferiche": Argomenti/Memoria-e-Periferiche.md
+      - "Recap da Reti": Argomenti/Memoria-e-Periferiche.md
+      - "Struttura della memoria": Argomenti/La-Struttura-Della-Memoria.md
+      - "Periferiche": Argomenti/Periferiche-io.md
   - Esercizi:
       - "Esercizi 1": esercizi/esercizi-01.md
 
