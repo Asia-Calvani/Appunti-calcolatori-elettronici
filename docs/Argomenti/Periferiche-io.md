@@ -26,3 +26,21 @@ Sulla scheda madre si trova un’ulteriore microcontrollore con 4 registri (RBR,
 
 È possibile comunicare alla tastiera diverse informazioni, alcune delle quali sono: typemeter (ogni quanto leggo un nuovo codice) ed eventuali led della tastiera.
 Il software si occupa di convertire i codici di scansione inviati dalla tastiera in codice ASCII:
+
+## Il video
+
+Per come lo studieremo noi, avremo a che fare con la tecnologia vga, più semplice da comprendere; questo avrà una sua memoria (memoria video) a cui possiamo accedervi normalmente
+
+Questa memoria può essere più o meno grande, ma in qualsiasi caso abbastanza da poter contenere tutta la pagina mostrata a schermo.
+
+La memoria video è particolare dal punto di vista hardware, poiché ha 2 porte di accesso (invece di una sola come la RAM):
+
+1 verso la CPU (identica alla RAM)
+1 verso l’adattatore video
+
+L’adattatore video può leggere tutta la memoria, e lo fa un numero diverso di volte al secondo (30, 60, 90, 120, …).
+
+La teconologia VGA permette l’interpretazione da parte dell’adattatore della memoria in due modi:
+
+Modalità Testo
+Modalità Video
