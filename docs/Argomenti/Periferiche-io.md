@@ -90,6 +90,37 @@ Gli hard disk operano a blocchi (tendenzialmente 512Byte), e possono trasferire 
 
 Quelli che studiamo noi sono gli HDD, che sono formati da diversi dischi di materiale ferromagnetico che girano costantemente ad una certa velocità (rpm) e che vegono letti da una testina estesa da un braccio che si muove ruotando attorno ad un perno. Le informazioni possono essere salvate su entrambe le facce di un disco. L’insieme di queste parti si chiama drive.
 
+C'è poi una seconda parte detta controllore che si occupa della logica che pilota il drive in base a ciò che viene richiesto dal software
+
 L’informazione su questi dischi è organizzata in settori (spicchi) e tracce (corridoi concentrici). L’intersezione tra un settore e una traccia si dice blocco.
 
+![Hardisk](../assets/hdd1.jpg)
+
 Nella lettura la testina recupera un blocco e lo invia all’interfaccia. Successivamente tramite software verrà recuperato. Nella scrittura si scrive via software su un blocco che poi verrà trasmesso alla traccia e successivamente salvato nel blocco desiderato nei dischi.
+
+Per poter stimare il tempo per una lettura/scrittura dobbiamo considerare tre parametri:
+
+- Seek: è il tempo che ci mette la testina ad arrivare ad una certa posizione $(\in O(ms))$
+- Latency: è il tempo che ci mette un settore ad arrivare a portata della testina $(\in O(ms))$ 
+- r/w time: è il tempo necessario per leggere in maniera corretta e completa un blocco. $(\in O(\micro s))$
+
+L’ultimo tempo nella storia recente è migliorato significatamente. All’inizio la testina veniva fatta fluttuare sui dischi e, in caso di assenza di corrente, l’energia prodotta dalla rotazione del disco veniva utilizzata per far spostare in posizione di riposo e non graffiare il disco la testina. Oggi vengono usati dei fermi sulla testina, così da permettere di avvicinarla, riducendo in maniera significativa il tmepo di lettura/scrittura.
+
+Ulteriori parametri da considerare per determinare la velocità di un accesso sono la geometria e la formattazione del disco. Infatti nei blocchi più esterni la lettura è più rapida ma presenta anche più byte sprecati.
+
+Le locazioni non vengono utilizzate dal programmatore con il loro vero numero, bensì viene creata dall’interfaccia un’array di blocchi chiamato LBA (Logical Block Address) che non fa testo sulle posizioni reali dei blocchi ma crea come una hashmap che non comunica all’utilizzatore.
+
+### Come ci si interagisce
+
+Essendo una periferica noi ci si interagisce tramite un'interfaccia che a sua volta comunica con il controllore dell'hardisk.
+In particolare ci interessano alcuni registri dell'interfaccia(tutti ad 8bit tranne uno che è a 16 bit):
+
+- SNR (Sector Number), CNL (Cylinder Number Low), CNH (Cylinder Number High), HND (Head aNd Drive): tutti da 8 bit, permettono di specificare il (primo) settore coinvolto nell’operazione;
+- SCR (Sector Counter, 8 bit): permette di specificare quanti settori (in sequenza a partire dal primo) sono coinvolti nell’operazione;
+- CMD (CoMmanD, 8 bit): permette di specificare il tipo di operazione (per es., lettura o scrittura);
+- BR (Buffer Register, 16 bit): permette di accedere al buffer interno, due byte alla volta;
+- STS (STatuS, 8 bit): contiene due flag che permettono di sapere se la precedente  operazione si è conclusa (e dunque è possibile accedere al registro BR);
+
+Da questo si capisce che l'individuare tramite le tre coordinate (testina, settore, traccia) ad esso ha solo interesse storico; ad oggi usiamo l'indirizzamento LBA; in particolare questo indirizzo viene calcolato tramite la composizione dei valori dei registri SNR, CNL, CNH e nei 4 bit meno significativi di HND.
+
+Facendo i conti, per identificare i settori si hanno a disposizione 28 bit, ogni settore è di 512 byte, in totale la dimensione massima di questi hard disk è quindi $2^37$ che sono 128GiB 
