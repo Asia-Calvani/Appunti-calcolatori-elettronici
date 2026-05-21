@@ -70,3 +70,27 @@ In memoria però il carattere non viene definito solo dal codice Ascii ma anche 
 ![tabella valori tastiera](../assets/text%20mode.png)
 
 Per noi la memoria video parte dal'indirizzo `0xB8000`
+
+### modalità grafica
+
+Il progammatore può accedervi al pixel per modificarne il colore; la modalità più semplice per l’utilizzo è quella tramite frame-buffer, nella quale si può decidere il colore di ogni pixel nell’indirizzo corretto inserendo il colore su 8bit (così da avere una matrice di byte).
+
+Il passaggio tra modalità è estremamente complesso e quello che vedremo noi è semplificato dalla virtualizzazione della macchina.
+
+Tolto questo accorgimento, la modalità gradica funziona in maniera analoga alla modalità testo.
+
+Nelle moderne schede video si trova inoltre un coprocessore grafico, che si occupa escusivamente di fare i disegni in parallelo al processore che esegue altre operazioni. Nel nostro caso non utilizzeremo il coprocessore ma faremo tutto da software.
+
+## Timer
+
+Interfaccia utile per contare il tempo passato, viene implementata tramite un'interfaccia più generale che conta degli eventi (gli impulsi elettrici); in particolare quello che usiamo noi ha 3 interfacce di conteggio:
+
+|N. Contatore|A cosa serve|
+|----|----|
+|Contatore 0| per le interruzioni|
+|Contatore 1| usato per fare refresh della RAM, oggi in disuso|
+|Contatore 2| collegato al dispositivo audio del pc|
+
+Ogni contatore ha 4 registri (2 di sola lettura, 2 di sola scrittura), inoltre i tre contatori hanno un registro a comune
+
+Iniziamo analizzando il Contatore 2
