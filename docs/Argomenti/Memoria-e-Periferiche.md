@@ -1,19 +1,3 @@
-<!-- KaTeX CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-sA+qwHio6+GI5B0lBrXZcQh8vsDN6cE0nfg1fdrabZzDXhIcuq2T4iggUvuB+0d1" crossorigin="anonymous">
-<!-- KaTeX JS -->
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-4nyKPOU9MXVgMWu/6WBQunSKcAw/FTdgW4CssEPan7iPBoJroWX92INpwKGVz5Sx" crossorigin="anonymous"></script>
-<!-- KaTeX auto-render extension -->
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-tsQFqpEReu7ZLhBV2z0KLc2t5aL1Pb1jByk7pZTPW+Urae9on52IyQ4GalLpFUwT" crossorigin="anonymous"></script>
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    renderMathInElement(document.body, {
-      delimiters: [
-        {left: "$$", right: "$$", display: true},
-        {left: "$", right: "$", display: false}
-      ]
-    });
-  });
-</script>
 # Memoria e Periferiche
 
 ## Architettura per come l'abbiamo vista a reti

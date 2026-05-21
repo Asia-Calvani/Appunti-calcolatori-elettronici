@@ -1,20 +1,3 @@
-<!-- KaTeX CSS -->
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css" integrity="sha384-sA+qwHio6+GI5B0lBrXZcQh8vsDN6cE0nfg1fdrabZzDXhIcuq2T4iggUvuB+0d1" crossorigin="anonymous">
-<!-- KaTeX JS -->
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js" integrity="sha384-4nyKPOU9MXVgMWu/6WBQunSKcAw/FTdgW4CssEPan7iPBoJroWX92INpwKGVz5Sx" crossorigin="anonymous"></script>
-<!-- KaTeX auto-render extension -->
-<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js" integrity="sha384-tsQFqpEReu7ZLhBV2z0KLc2t5aL1Pb1jByk7pZTPW+Urae9on52IyQ4GalLpFUwT" crossorigin="anonymous"></script>
-<script>
-  document.addEventListener("DOMContentLoaded", function() {
-    renderMathInElement(document.body, {
-      delimiters: [
-        {left: "$$", right: "$$", display: true},
-        {left: "$", right: "$", display: false}
-      ]
-    });
-  });
-</script>
-
 # Periferiche e spazio di IO
 
 Per la macchia virtuale che abbiamo (QEMU) abbiamo delle periferiche dello standard ISA simulate; in particolare abbiamo la tastiera (PC AT), Video (standard VGA), timer (PC AT), HardDisk (PC AT quando inserito)
@@ -91,6 +74,22 @@ Interfaccia utile per contare il tempo passato, viene implementata tramite un'in
 |Contatore 1| usato per fare refresh della RAM, oggi in disuso|
 |Contatore 2| collegato al dispositivo audio del pc|
 
-Ogni contatore ha 4 registri (2 di sola lettura, 2 di sola scrittura), inoltre i tre contatori hanno un registro a comune
+Ogni contatore ha 4 registri (2 di sola lettura [dello stato corrente del contatore STR_LSB e STR_MSB], 2 di sola scrittura [per impostare parte alta e parte bassa del contatore CTR_LSB E CTR_MSB]), inoltre i tre contatori hanno un registro a comune (CWR)
+
+Il chip occupa gli indirizzi 0x40-0x43 (ha solo 2 piedini), 0x40  per tutto il contatore 0, 0x41 per il contatore 1 e 0x42 per il contatore 2, mentre 0x43 è per CWR
 
 Iniziamo analizzando il Contatore 2
+
+È importante intanto dire che il contatore non è collegato direttamente allo speaker ma prima passa una porta AND con il registro SPR all’indirizzo 0x61. Questa struttura permetteva il mute qual’ora venisse inserito 0 all’intenro di SPR, oltre a poter fare dei giochetti particolari con l’audio.
+
+## Hard disk
+
+è una memoria di massa; il processore (per incompatibilità nelle interfacce) non può eseguire i programmi presenti lì dentro.
+
+Gli hard disk operano a blocchi (tendenzialmente 512Byte), e possono trasferire solo multipli del blocco. La comunicazione viene comunque effettuata tramita un’interfaccia con il bus, che deve essere gestita da software.
+
+Quelli che studiamo noi sono gli HDD, che sono formati da diversi dischi di materiale ferromagnetico che girano costantemente ad una certa velocità (rpm) e che vegono letti da una testina estesa da un braccio che si muove ruotando attorno ad un perno. Le informazioni possono essere salvate su entrambe le facce di un disco. L’insieme di queste parti si chiama drive.
+
+L’informazione su questi dischi è organizzata in settori (spicchi) e tracce (corridoi concentrici). L’intersezione tra un settore e una traccia si dice blocco.
+
+Nella lettura la testina recupera un blocco e lo invia all’interfaccia. Successivamente tramite software verrà recuperato. Nella scrittura si scrive via software su un blocco che poi verrà trasmesso alla traccia e successivamente salvato nel blocco desiderato nei dischi.
