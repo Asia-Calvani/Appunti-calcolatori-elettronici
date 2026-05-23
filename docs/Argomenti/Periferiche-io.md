@@ -70,9 +70,9 @@ Interfaccia utile per contare il tempo passato, viene implementata tramite un'in
 
 |N. Contatore|A cosa serve|
 |----|----|
-|Contatore 0| per le interruzioni|
-|Contatore 1| usato per fare refresh della RAM, oggi in disuso|
-|Contatore 2| collegato al dispositivo audio del pc|
+|Contatore 0|per le interruzioni|
+|Contatore 1|usato per fare refresh della RAM, oggi in disuso|
+|Contatore 2|collegato al dispositivo audio del pc|
 
 Ogni contatore ha 4 registri (2 di sola lettura [dello stato corrente del contatore STR_LSB e STR_MSB], 2 di sola scrittura [per impostare parte alta e parte bassa del contatore CTR_LSB E CTR_MSB]), inoltre i tre contatori hanno un registro a comune (CWR)
 
@@ -101,7 +101,7 @@ Nella lettura la testina recupera un blocco e lo invia all’interfaccia. Succes
 Per poter stimare il tempo per una lettura/scrittura dobbiamo considerare tre parametri:
 
 - Seek: è il tempo che ci mette la testina ad arrivare ad una certa posizione $(\in O(ms))$
-- Latency: è il tempo che ci mette un settore ad arrivare a portata della testina $(\in O(ms))$ 
+- Latency: è il tempo che ci mette un settore ad arrivare a portata della testina $(\in O(ms))$
 - r/w time: è il tempo necessario per leggere in maniera corretta e completa un blocco. $(\in O(\micro s))$
 
 L’ultimo tempo nella storia recente è migliorato significatamente. All’inizio la testina veniva fatta fluttuare sui dischi e, in caso di assenza di corrente, l’energia prodotta dalla rotazione del disco veniva utilizzata per far spostare in posizione di riposo e non graffiare il disco la testina. Oggi vengono usati dei fermi sulla testina, così da permettere di avvicinarla, riducendo in maniera significativa il tmepo di lettura/scrittura.
@@ -123,4 +123,4 @@ In particolare ci interessano alcuni registri dell'interfaccia(tutti ad 8bit tra
 
 Da questo si capisce che l'individuare tramite le tre coordinate (testina, settore, traccia) ad esso ha solo interesse storico; ad oggi usiamo l'indirizzamento LBA; in particolare questo indirizzo viene calcolato tramite la composizione dei valori dei registri SNR, CNL, CNH e nei 4 bit meno significativi di HND.
 
-Facendo i conti, per identificare i settori si hanno a disposizione 28 bit, ogni settore è di 512 byte, in totale la dimensione massima di questi hard disk è quindi $2^37$ che sono 128GiB 
+Facendo i conti, per identificare i settori si hanno a disposizione 28 bit, ogni settore è di 512 byte, in totale la dimensione massima di questi hard disk è quindi $2^37$ che sono 128GiB

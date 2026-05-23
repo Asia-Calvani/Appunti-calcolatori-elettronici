@@ -17,6 +17,7 @@ nav:
       - "Recap da Reti": Argomenti/Memoria-e-Periferiche.md
       - "Struttura della memoria": Argomenti/La-Struttura-Della-Memoria.md
       - "Periferiche": Argomenti/Periferiche-io.md
+      - "La Cache": Argomenti/Memoria-cache.md
   - Esercizi:
       - "Esercizi 1": esercizi/esercizi-01.md
 
