@@ -12,30 +12,38 @@ Sappiamo già che il processore lavora per stati. Anche i processi seguono la st
 
 ![stati dei processi](../assets/schema_stati_processi.png)
 
-I processi devono essere prima di tutto attivati, in modo che possano cominciare ad essere eseguiti. L’attivazione comporta la creazione di tutte le strutture dati necessarie al corretto funzionamento del processo. Queste strutture comprendono due componenti:
+I processi devono essere prima di tutto attivati (ovvero devono essere create tutte le strutture dati che servono a farlo funzionare), in modo che possano cominciare ad essere eseguiti.Le struttore di ogni processo comprendono il __Descrittore di processo__ e le __Pile__.
 
-Descrittore di processo
-Pile
-In alcuni sistemi i processi da attivare sono decisi staticamente all’avvio del sistema. Nel sistema che realizzeremo, descriveremo il caso in cui i processi possano essere creati dinamicamente da altri processi (tranne ovviamente il primo processo, che sarà creato dal sistema stesso all’avvio).
+In alcuni sistemi i processi da attivare sono decisi staticamente all’avvio del sistema. Nel nostro, descriveremo il caso in cui i processi possano essere creati dinamicamente da altri processi (tranne ovviamente il primo processo, che sarà creato dal sistema stesso all’avvio).
 
-Una volta attivato correttamente, il processo si trova quindi nello stato di pronto, nel nostro sistema questa lista è rappresentata dalla lista pronti. A questo punto, il processore, tramile la schedulazione e il dispatch, porta il processo in esecuzione, nel nostro sistema rappresentata dalla variabile esecuzione.
+Una volta attivato correttamente, il processo si trova nello stato di pronto, nel nostro sistema questa lista è rappresentata dalla lista `pronti`. A questo punto, il processore, tramite _la schedulazione e il dispatch_, porta il processo in __esecuzione__, nel nostro sistema rappresentata dalla variabile `esecuzione`.
 
-È importante capire che Schedulazione e Dispatch sono due cose diverse.
+Schedulazione e Dispatch sono due cose diverse:
 
-La schedulazione si occupa di gestire l’ordine dei processi pronti all’interno della lista, scegliendo quello che andrà in esecuzione. Nel nostro sistema abbiamo una funzione sistema chiamata schedulatore() che si occupa proprio di selezionare la testa di pronti (costruita in modo da essere ordinata per priorità) e inserirla in esecuzione.
+- __La schedulazione__ $\rightarrow$ gestisce l’ordine dei _processi pronti_ all’interno della lista (`pronti`), scegliendo quello che andrà in _esecuzione_. La funzione `sistema` chiamata `schedulatore()` che si occupa proprio di selezionare la testa della lista `pronti` (costruita in modo da essere ordinata per priorità) e inserirla in `esecuzione`.
+- __Il dispatch__ $\rightarrow$ si occupa di tutti i passaggi necessari per far cedere il controllo ad un processo ed assegnarlo ad un altro. Nel nostro sistema questa avviene tramite le operazioni di:
 
-Il dispatch si occupa invece di tutti i passaggi necessari per far cedere il controllo ad un processo ed assegnarlo ad un altro. Nel nostro sistema questa avviene tramite le operazioni di:
-
+```assembly
 CALL carica_stato
 IRETQ
+```
 
-Chiamate all’uscita del gate. Infatti queste fanno adesso riferimento al constesto del processo che si trova in esecuzione, aggiornando quindi i dati all’interno dei registri con quelli del nuovo processo.
+(In `sistema.s`)
 
-Se un processo si trova nello stato di esecuzione, il processore sta eseguendo le sue istruzioni. In questo momento il processo ha il controllo del processore, e può cambiare nel tempo il suo stato. Con un solo processore un solo processo per volta può trovarsi in esecuzione.
+Chiamate all’uscita del gate. Infatti queste fanno adesso riferimento al constesto del processo che si trova in `esecuzione`, aggiornando quindi i dati all’interno dei registri con quelli del nuovo processo.
 
-Mentre si trova in esecuzione un processo può chiedere di terminare, oppure di sospendersi in attesa di un evento. Nel primo caso il processo rientra nello stato di terminazione (abbiamo la routine terminate_p() nella nostra macchina). Nel secondo invece passa allo stato bloccato. Mentre un processo è bloccato il processore prosegue con un’altro nella coda pronti. Quando l’evento atteso si verifica il processo torna nello stato di pronto (può anche accadere che vada direttamente in esecuzione, anche se ciò non è mostrato esplicitamente in figura)
+Se un processo si trova nello stato di `esecuzione`, il processore sta eseguendo le __sue__ istruzioni. In questo momento __il processo ha il controllo__ del _processore_, e può cambiare nel tempo il suo stato. __Con un solo processore un solo processo per volta può trovarsi in esecuzione__.
 
-Nello schema si trova anche la preemption, che permette ad un processo di passare dall’esecuzione direttamente allo stato pronto.
+Mentre si trova in esecuzione un processo può fare 2 cose: 
+
+- chiedere di terminare:
+  - chiamo  `terminate_p()`
+  - il processo rientra nello stato di terminazione
+- chiedere di sospendersi in attesa di un evento.  
+  - passa allo stato bloccato. Mentre un processo è bloccato il processore prosegue con un’altro nella coda pronti. 
+  - Quando l’evento atteso si verifica il processo torna nello stato di pronto (può anche accadere che vada direttamente in esecuzione, anche se ciò non è mostrato esplicitamente in figura)
+
+Nello schema si trova anche la _preemption_, che permette ad un processo di passare dall’`esecuzione` direttamente allo stato `pronto`.
 
 In questo caso il processo non sta attendendo un evento, non è più in esecuzione soltanto perchè un altro processo, per un motivo o per un altro (ad esempio priorità) sta occupando il processore durante quello che doveva essere il suo tempo. Nei sistemi senza preemption un processo può occupare il processore indefinitamente senza lasciare mai il processore agli altri processi, basta che non chieda mai di terminare, che non generi processi a priorità più elevata o che non vada mai nello stato di bloccato.
 
