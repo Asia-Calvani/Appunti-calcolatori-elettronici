@@ -47,27 +47,76 @@ Nello schema si trova anche la _preemption_, che permette ad un processo di pass
 
 In questo caso il processo non sta attendendo un evento, non è più in esecuzione soltanto perchè un altro processo, per un motivo o per un altro (ad esempio priorità) sta occupando il processore durante quello che doveva essere il suo tempo. Nei sistemi senza preemption un processo può occupare il processore indefinitamente senza lasciare mai il processore agli altri processi, basta che non chieda mai di terminare, che non generi processi a priorità più elevata o che non vada mai nello stato di bloccato.
 
-Per quanto riguarda lo scheduling esistono diverse strategie da poter seguire, quella vedremo noi è la strategia a priorità fissa. Secondo questa politica, ad ogni processo, al momento della creazione, è assegnata una priorità numerica. Il nostro sistema si impegna quindi a garantire che, in ogni istante, si trovi in esecuzione il processo che ha la massima priorità tra tutti quelli pronti.
+Per quanto riguarda lo scheduling esistono diverse strategie da poter seguire, quella vedremo noi è la strategia a __priorità fissa__. Secondo questa politica, ad ogni processo, al momento della _creazione_, è assegnata una __priorità numerica__. Il nostro sistema si impegna quindi a garantire che, in ogni istante, si trovi in __esecuzione il processo che ha la massima priorità tra tutti quelli pronti.__
 
-Questo ci permette di dover eseguire una azione di schedulazione() solo quando un processo passa da:
+Questo ci permette di dover eseguire una azione di `schedulazione()` solo quando un processo passa da:
 
-esecuzione 
- bloccato: il processore si libera, e dunque dobbiamo mettere in esecuzione il processo a maggiore priorità tra quelli in pronti
-bloccato 
- pronto: si genera quando c’è un nuovo processo pronto, che potrebbe avere priorità maggiore di quello attualmente in esecuzione. Per rispettare la regola che abbiamo promesso di garantire potremmo dover fare preemption sul processo in esecuzione.
+- esecuzione $\rightarrow$ bloccato: il processore si libera, e dunque dobbiamo mettere in esecuzione il processo a maggiore priorità tra quelli in pronti
+- bloccato $\rightarrow$ pronto: si genera quando c’è un nuovo processo pronto, che potrebbe avere priorità maggiore di quello attualmente in esecuzione. Per rispettare la regola che abbiamo promesso di garantire potremmo dover fare preemption sul processo in esecuzione.
+  
 Dobbiamo inoltre notare che anche quando un processo P1 ne attiva un altro P2 ci troviamo in una situazione simile, in quanto il nuovo processo appena creato viene inserito in pronti, e potrebbe avere priorità superiore a quello in esecuzione.
 
-Quello che ci impegniamo a garantire quindi è che i processi non possano attivarne altri a priorità maggiore della propria. Perciò nel nostro sistema non saranno mai necessarie preemption dopo le creazioni dei processi.
+Quello che ci impegniamo a garantire quindi è che i processi __non possano attivarne altri a priorità maggiore della propria__. Perciò nel nostro sistema non saranno mai necessarie preemption dopo le creazioni dei processi.
 
 # Passare da un processo all'altro
 
-dobbiamo obbligatoriamente passare dalla idt; tramite le routine salva_stato e carica stato dispatchsalva e carica le varie 4
+Per farlo bisogna per forza passare dal gate della IDT.
 
-Lo scheduler, che invece identifica e ordina i processi pronti, utilizza un’altra variable globale pronti che punta ad una lista dove si trovano i vari processi nello stato di pronto. Poiché la nostra politica è quella di eseguire i processi a priorità maggiore, quando inseriamo i processi in questa lista, lo facciamo in ordine di priorità, cosicché il prossimo processo da eseguire sarà sempre quello in cima alla lista.
+Quando si accede ad un gate della IDT sappiamo che vengono già salvate delle informazioni (5 long word):
+
+- [0] Informazioni per noi non rilevanti
+- [1] RSP: indirizzo della pila al momento del passaggio
+- [2] RFLAGS: stato dei flag al momento del passaggio
+- [3] CS: livello precedente all’attraversamento del gate
+- [4] RIP: istruzione dalla quale ripartire
+Perciò tutto quello che dovrà fare il dispatch è salvare il contenuto dei registri tramite la routine invocata:
+
+```assemblt
+routine_gate:
+    CALL salva_stato        ; Macro che salva il contenuto di tutti i registri in pila
+
+    /*
+    * corpo routine
+    */
+
+    CALL carica_stato       ; Macro che carica il contenuto di tutti i registri dalla pila
+    IRETQ
+```
+(in sistema.s)
+
+Inoltre, per capire a quale processo ci stiamo riferendo quando invochiamo salva_stato e carica_stato utilizziamo come già detto una variabile globale esecuzione. esecuzione è implementata come un puntatore a descrittore di processo `des_proc*`:
+
+``` cpp
+struct des_proc {
+  /// identificatore numerico del processo
+  natw id;
+  /// livello di privilegio (LIV_UTENTE o LIV_SISTEMA)
+  natw livello;
+  /// precedenza nelle code dei processi
+  natl precedenza;
+  /// indirizzo della base della pila sistema
+  vaddr punt_nucleo;
+  /// copia dei registri generali del processore
+  natq contesto[N_REG];
+  /// radice del TRIE del processo (vedere la parte sulla memoria virtuale)
+  paddr cr3;
+
+  /// prossimo processo in coda
+  des_proc* puntatore;
+
+  /// parametro `f` passato alla `activate_p`/`_pe` che ha creato questo processo
+  void (*corpo)(natq);
+  /// parametro `a` passato alla `activate_p`/`_pe` che ha creato questo processo
+  natq  parametro;
+  /// @}
+};
+```
+
+Lo scheduler,sfrutta la variable globale `pronti` che punta ad una lista dove si trovano i vari processi nello stato di pronto. Poiché la nostra politica è quella di eseguire i processi a priorità maggiore, quando inseriamo i processi in questa lista, lo facciamo in ordine di priorità, cosicché il prossimo processo da eseguire sarà sempre quello __in cima alla lista__.
 
 Per quanto riguarda la gestione dello stato bloccato vedremo che sarà necessario considerare ogni azione di bloccaggio in maniera diversa.
 
-Le varie operazioni eseguite nel modulo sistema (come questa routine stessa), sono indipendenti dai processi, che si trovano come congelati durante questo frangente. (finché la prima cosa nella routine che facciamo è salvarne lo stato, e l’ultima cosa è caricarlo)
+Le varie operazioni eseguite nel modulo sistema (come questa routine stessa), __sono indipendenti dai processi__, che si trovano come congelati durante questo frangente. (finché la prima cosa nella routine che facciamo è salvarne lo stato, e l’ultima cosa è caricarlo)
 
 Quando entriamo nel gate da un processo P1 salviamo, tra le varie informazioni, l’indirizzo della pila utilizzata dal processo, nella sezione rsp della pila di sistema di P1. Facciamo ciò perché il registro rsp del processo in questo istante punta proprio alla pila di sistema di P1.
 
@@ -75,62 +124,39 @@ Quando eseguiamo quindi la salva_stato, il registro rsp punta proprio la pila di
 
 Ciò significa che, carica_stato ripristinerà la pila di sistema del processo P2, e la successiva IRETQ ripristinerà proprio le istruzioni relative a quel processo, reinserendo il valore della pila di stack di P2.
 
-Tutto il necessario per cambiare processo è quindi cambiare la variabile esecuzione all’interno del corpo della routine.
+__Tutto il necessario per cambiare processo è quindi cambiare la variabile esecuzione all’interno del corpo della routine.__
 
 Quando viene selezionato il prossimo processo però può avvenire che ci sia un solo processo in esecuzione e che questo vada in blocco. In questo caso la coda pronti è vuota, e dovremmo gestire il nostro processore in maniera che faccia comunque qualcosa in attesa il processo in blocco torni in pronti.
 
-La strategia che adottiamo è quella di inserire un processo dummy con priorità più bassa di tutte (0), sempre presente in coda. Questo processo consiste in nient’altro che un in un ciclo infinito, che ha come obiettivo quello di attendere semplicemente che arrivi un nuovo processo significativo nello stato di pronto.
+La strategia che adottiamo è quella di inserire un processo `dummy` con priorità più bassa di tutte (0), sempre presente in coda. Questo processo consiste in nient’altro che un in un ciclo infinito, che ha come obiettivo quello di attendere semplicemente che arrivi un nuovo processo significativo nello stato di pronto.
 
 # Creazione processi
 
-Lo scheduler, che invece identifica e ordina i processi pronti, utilizza un’altra variable globale pronti che punta ad una lista dove si trovano i vari processi nello stato di pronto. Poiché la nostra politica è quella di eseguire i processi a priorità maggiore, quando inseriamo i processi in questa lista, lo facciamo in ordine di priorità, cosicché il prossimo processo da eseguire sarà sempre quello in cima alla lista.
+Quando viene creato un processo `(activate_p(f, a, prec, livello))`, dobbiamo fare in modo che, quando questo venga selezionato per andare in escuzione lo faccia eseguendo la funzione `f(a)`.
 
-Per quanto riguarda la gestione dello stato bloccato vedremo che sarà necessario considerare ogni azione di bloccaggio in maniera diversa.
+Alla creazione del processo la `activate_p()`, oltre ad inserire un puntatore al processo in una nuova riga della proc_table, ne alloca tutte le strutture dati(Descrittore di processo (des_proc) e pila sistema) nella porzione M1 della memoria:
 
-Le varie operazioni eseguite nel modulo sistema (come questa routine stessa), sono indipendenti dai processi, che si trovano come congelati durante questo frangente. (finché la prima cosa nella routine che facciamo è salvarne lo stato, e l’ultima cosa è caricarlo)
+![come si salva in m1](../assets/schema_proc_M1.png)
 
-Quando entriamo nel gate da un processo P1 salviamo, tra le varie informazioni, l’indirizzo della pila utilizzata dal processo, nella sezione rsp della pila di sistema di P1. Facciamo ciò perché il registro rsp del processo in questo istante punta proprio alla pila di sistema di P1.
+## `desc_proc`
 
-Quando eseguiamo quindi la salva_stato, il registro rsp punta proprio la pila di sistema P1 salvata dall’entrata al gate.
+- `id`: codice identificativo nella proc_table del processo
+- `livello`: LIV_UTENTE per tutti i processi che vogliamo possano essere chiamati ed eseguiti dall’utente.
+- `precedenza`: valore di prec passato da `activate_p()`
+- `punt_nucleo`: punta alla base pila di sistema, come se fosse vuota. Questo è necessario per gestire opportunamente le interruzioni quando il processo sarà in operazione a livello utente. Infatti, in questo caso, la sia pila sistema è sempre vuota.
+- `contesto`: contiene il valore dei registri al momento della creazione del processo, quindi sono tutti vuoti, ad eccezione di:
+  - `contesto[I_RDI]`: parametro a passato da `activate_p()`
+  - `contesto[I_RSI]`: indirizzo della pila sistema
 
-Ciò significa che, carica_stato ripristinerà la pila di sistema del processo P2, e la successiva IRETQ ripristinerà proprio le istruzioni relative a quel processo, reinserendo il valore della pila di stack di P2.
+## Pila Sistema
 
-Tutto il necessario per cambiare processo è quindi cambiare la variabile esecuzione all’interno del corpo della routine.
+- `RIP`: funzione f passata da acrivate_p()
+- `CS`: livello di chi è entrato nel gate (solitamente LIV_UTENTE)
+- `RFLAG`: Registro dei flag completamente resettato, tranne per quanto riguarda due flag:
+  - `IF = 1`: per permettere le interruzioni durante l’esecuzione della routine
+  - `IOPL = sis`, setta la priorità di sistema alle periferiche `IO` per vietare l’utilizzo di istruzioni quali `IN`, `OUT`. Inoltre modifica il livello di privilegio per bloccare anche le istruzioni `STI` e `CLI`
+- `RSP: rsp-ini`, vedremo più avanti in cosa consiste
 
-Quando viene selezionato il prossimo processo però può avvenire che ci sia un solo processo in esecuzione e che questo vada in blocco. In questo caso la coda pronti è vuota, e dovremmo gestire il nostro processore in maniera che faccia comunque qualcosa in attesa il processo in blocco torni in pronti.
+(quando si modifica `RFLAG` tramite `POPF` i flag `IF` e `IOPL` non vengono modificati)
 
-La strategia che adottiamo è quella di inserire un processo dummy con priorità più bassa di tutte (0), sempre presente in coda. Questo processo consiste in nient’altro che un in un ciclo infinito, che ha come obiettivo quello di attendere semplicemente che arrivi un nuovo processo significativo nello stato di pronto.
-
-desc_proc
-
-id: codice identificativo nella proc_table del processo
-
-livello: LIV_UTENTE per tutti i processi che vogliamo possano essere chiamati ed eseguiti dall’utente.
-
-precedenza: valore di prec passato da activate_p()
-
-punt_nucleo: punta alla base pila di sistema, come se fosse vuota. Questo è necessario per gestire opportunamente le interruzioni quando il processo sarà in operazione a livello utente. Infatti, in questo caso, la sia pila sistema è sempre vuota.
-
-contesto: contiene il valore dei registri al momento della creazione del processo, quindi sono tutti vuoti, ad eccezione di:
-
-contesto[I_RDI]: parametro a passato da activate_p()
-
-contesto[I_RSI]: indirizzo della pila sistema
-
-Pila Sistema
-
-RIP: funzione f passata da acrivate_p()
-
-CS: livello di chi è entrato nel gate (solitamente LIV_UTENTE)
-
-RFLAG: Registro dei flag completamente resettato, tranne per quanto riguarda due flag:
-
-IF = 1: per permettere le interruzioni durante l’esecuzione della routine
-
-IOPL = sis, setta la priorità di sistema alle periferiche IO per vietare l’utilizzo di istruzioni quali IN, OUT. Inoltre modifica il livello di privilegio per bloccare anche le istruzioni STI e CLI
-
-RSP: rsp-ini, vedremo più avanti in cosa consiste
-
-(quando si modifica RFLAG tramite POPF i flag IF e IOPL non vengono modificati)
-
-Il codice che gestisce tutto questo nella nostra macchina QEMU si trova nei file sistema.cpp e sistema.s nella directory nucleo-8.3/sistema/.
+__Il codice che gestisce tutto questo nella nostra macchina QEMU si trova nei file sistema.cpp e sistema.s nella directory nucleo-8.3/sistema/.__
