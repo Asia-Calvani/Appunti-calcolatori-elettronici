@@ -139,23 +139,31 @@ primitiva_i:
 
 ## Scrivere una primitiva
 
-Per scrivere una primitiva dobbiamo eseguire una serie di passaggi, alcuni obbligati altri semplicemente utili.
+Per scrivere una primitiva dobbiamo eseguire una serie di passaggi, alcuni obbligati altri semplicemente utili (ma non obbligatori).
 
-Il primo passaggio utile (ma non necessario) è creare una nuova costante nel file costanti.h così da potervi riferire per nome e non per valore:
+Il primo passaggio utile (ma non necessario) è creare una nuova costante nel file `costanti.h` così da potervi riferire per nome e non per valore:
 
+```cpp
 // ...
 #define TIPO_I  0x29    /// tipo inutile
 // ...
-A questo punto il primo passaggi obbligatorio è inserirla nel sys.h:
+```
 
+A questo punto il primo passaggi obbligatorio è inserirla nel `sys.h`:
+
+```cpp
 // ...
 extern "C" int inutile(int a, int b);
 // ...
+```
+
 Adesso l’utente può dichiararne il corpo e successivamente utilizzarla.
 
 Vediamo quindi come aggiungerla:
 
-Nel file utente.s aggiungiamo le stab:
+Nel file `utente.s` aggiungiamo le stab:
+
+```assembly
 ; ...
     .global inutile
 inutile:
@@ -164,10 +172,13 @@ inutile:
     RET
     .cfi_endproc        ; per il debugger
 ; ...
+```
+
 Definiamo e descriviamo quindi la funzione:
 
-sistema.s
+`sistema.s`
 
+```assembly
 ;...
 
 ; Aggiungiamo alla tabella IDT
@@ -175,6 +186,9 @@ init_idt:
     ;...
     carica_gate TIPO_I  a_inutile   LIV_UTENTE
     ;...
+```
+
+```assembly
 ; ...
 .extern c_inutile
 a_inutile:
@@ -184,8 +198,11 @@ a_inutile:
     IRETQ
 
 ;...
-sistema.cpp
+```
 
+`sistema.cpp`
+
+```cpp
 // ...
 /**
 * Funzione inutile che somma a, b e la priorità del processo che l'ha invocata
@@ -203,8 +220,11 @@ extern "C" void c_inutile(int a, int b){
     // salvato con la `salva_stato`, così da recuperarlo quando
     // chiameremo la `carica_stato`
 }
-L’utente a questo punto può utilizzare la nuova primitiva nel file utente.cpp:
+```
 
+L’utente a questo punto può utilizzare la nuova primitiva nel file `utente.cpp`:
+
+```cpp
 #include<all.h>
 
 int main(){
@@ -212,17 +232,15 @@ int main(){
     pause();
     terminate_p();
 }
-inutile(2, 3) = 1028
+```
 
-4.1. Funzioni di supporto
-Le seguenti funzioni sono già definite in sistema.cpp e possono essere utilizzare nel definire nuove primitive:
+> inutile(2, 3) = 1028
 
-void schedulatore(): sceglie il prossimo processo da mettere in esecuzione, estraendolo dalla pila pronti e salvandolo nella variabile esecuzione
+### Funzioni di supporto
+Le seguenti funzioni sono già definite in `sistema.cpp` e possono essere utilizzare nel definire _nuove primitive_:
 
-void inserimento_lista(des_proc*& p_lista, des_proc* p_elem): Inserisce p_elem nella lista p_lista, mantenendo l’ordinamento basato sul campo precedenza. Se la lista contiene altri elementi che hanno la stessa precedenza del nuovo, il nuovo viene inserito come ultimo tra questi.
-
-des_proc* rimozione_lista(des_proc*& p_lista): Estrae l’elemento in testa alla p_lista e ne restituisce un puntatore (nullptr se la lista è vuota).
-
-void inspronti(): Inserisce il des_proc puntato da esecuzione in testa alla coda pronti senza effettuare controlli sulla priorità.
-
-void c_abort_p(): Distrugge il processo puntato da esecuzione e chiama schedulatore()
+- void schedulatore(): sceglie il prossimo processo da mettere in esecuzione, estraendolo dalla pila pronti e salvandolo nella variabile esecuzione
+- void inserimento_lista(des_proc*& p_lista, des_proc* p_elem): Inserisce p_elem nella lista p_lista, mantenendo l’ordinamento basato sul campo precedenza. Se la lista contiene altri elementi che hanno la stessa precedenza del nuovo, il nuovo viene inserito come ultimo tra questi.
+- des_proc* rimozione_lista(des_proc*& p_lista): Estrae l’elemento in testa alla p_lista e ne restituisce un puntatore (nullptr se la lista è vuota).
+- void inspronti(): Inserisce il des_proc puntato da esecuzione in testa alla coda pronti senza effettuare controlli sulla priorità.
+- void c_abort_p(): Distrugge il processo puntato da esecuzione e chiama schedulatore()
